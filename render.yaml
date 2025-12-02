@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: kushtati-immo-api
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_PATH
+        value: /var/data/kushtati.db
+      - key: FRONTEND_URL
+        sync: false
+      - key: MAX_FILE_SIZE
+        value: 5242880
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+    disk:
+      name: kushtati-data
+      mountPath: /var/data
+      sizeGB: 1
