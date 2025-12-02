@@ -188,7 +188,177 @@ const seed = async () => {
       ]
     );
 
-    console.log('✅ 8 propriétés créées\n');
+    const prop9 = await runQuery(
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        owner1,
+        'Appartement Standing Almamya',
+        'Appartement haut standing 3 chambres avec vue panoramique sur Conakry.',
+        'Almamya, Conakry',
+        3500000,
+        'Rent',
+        3,
+        2,
+        1500,
+        'available'
+      ]
+    );
+
+    const prop10 = await runQuery(
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        owner2,
+        'Bureau Moderne Centre-Ville',
+        'Espace de bureaux moderne de 200m², climatisé, avec parking sécurisé.',
+        'Centre-Ville, Conakry',
+        4000000,
+        'Rent',
+        0,
+        2,
+        2000,
+        'available'
+      ]
+    );
+
+    const prop11 = await runQuery(
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        owner1,
+        'Villa Familiale Lambanyi',
+        'Grande villa familiale 5 chambres avec jardin arboré et garage 2 voitures.',
+        'Lambanyi, Conakry',
+        18000000,
+        'Sale',
+        5,
+        3,
+        3000,
+        'available'
+      ]
+    );
+
+    const prop12 = await runQuery(
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        owner2,
+        'Studio Équipé Hamdallaye',
+        'Studio tout équipé avec cuisine américaine, idéal étudiant ou célibataire.',
+        'Hamdallaye, Conakry',
+        1200000,
+        'Rent',
+        1,
+        1,
+        400,
+        'available'
+      ]
+    );
+
+    const prop13 = await runQuery(
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        owner1,
+        'Immeuble de Rapport Koloma',
+        'Immeuble R+2 avec 6 appartements F3, entièrement loués, excellent rendement.',
+        'Koloma, Conakry',
+        120000000,
+        'Sale',
+        18,
+        12,
+        15000,
+        'available'
+      ]
+    );
+
+    const prop14 = await runQuery(
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        owner2,
+        'Appartement F2 Bambeto',
+        'Bel appartement 2 pièces lumineux, proche écoles et commerces.',
+        'Bambeto, Conakry',
+        2000000,
+        'Rent',
+        2,
+        1,
+        800,
+        'rented'
+      ]
+    );
+
+    const prop15 = await runQuery(
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        owner1,
+        'Résidence Sécurisée Coléah',
+        'Villa dans résidence fermée avec gardiennage, piscine commune, 4 chambres.',
+        'Coléah, Conakry',
+        22000000,
+        'Sale',
+        4,
+        3,
+        2800,
+        'available'
+      ]
+    );
+
+    const prop16 = await runQuery(
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        owner2,
+        'Terrain Constructible Kobaya',
+        'Terrain viabilisé de 1000m² avec titre foncier, idéal construction villa.',
+        'Kobaya, Conakry',
+        35000000,
+        'Sale',
+        0,
+        0,
+        10000,
+        'available'
+      ]
+    );
+
+    const prop17 = await runQuery(
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        owner1,
+        'Penthouse Tombo',
+        'Penthouse luxueux dernier étage, terrasse 360°, vue mer exceptionnelle.',
+        'Tombo, Conakry',
+        55000000,
+        'Sale',
+        4,
+        4,
+        4000,
+        'available'
+      ]
+    );
+
+    const prop18 = await runQuery(
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        owner2,
+        'Maison Traditionnelle Labé',
+        'Belle maison traditionnelle rénovée au cœur de Labé, charme authentique.',
+        'Labé',
+        6000000,
+        'Sale',
+        4,
+        2,
+        1800,
+        'available'
+      ]
+    );
+
+    console.log('✅ 18 propriétés créées\n');
 
     // 3. Créer des contrats
     console.log('📋 Création des contrats...');
