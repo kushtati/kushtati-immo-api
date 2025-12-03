@@ -2,6 +2,8 @@ services:
   - type: web
     name: kushtati-immo-api
     runtime: node
+    plan: free
+    region: oregon
     buildCommand: npm install
     startCommand: npm start
     envVars:
@@ -11,15 +13,19 @@ services:
         value: 10000
       - key: JWT_SECRET
         generateValue: true
-      - key: DATABASE_PATH
-        value: /var/data/kushtati.db
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kushtati-postgres
+          property: connectionString
       - key: FRONTEND_URL
         sync: false
       - key: MAX_FILE_SIZE
         value: 5242880
       - key: UPLOAD_DIR
-        value: /var/data/uploads
-    disk:
-      name: kushtati-data
-      mountPath: /var/data
-      sizeGB: 1
+        value: ./uploads
+
+databases:
+  - name: kushtati-postgres
+    databaseName: kushtati_immo
+    plan: free
+    region: oregon

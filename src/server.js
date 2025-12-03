@@ -13,22 +13,28 @@ const db = require('./config/database');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middlewares - Configuration CORS permissive pour Docker
+// Middlewares - Configuration CORS
 app.use(cors({
   origin: function (origin, callback) {
     // Autoriser les requêtes sans origine (mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
-    
+
     // Liste des origines autorisées
     const allowedOrigins = [
       'http://localhost:3000',
+      'http://localhost:3001',
       'http://localhost:80',
       'http://frontend',
       'http://frontend:80',
+      'https://kushtati-immo.onrender.com',
+      'https://kushtati-immo-api.onrender.com',
       process.env.FRONTEND_URL
     ].filter(Boolean);
-    
-    if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost')) {
+
+    // Accepter localhost et les URLs Render
+    if (allowedOrigins.indexOf(origin) !== -1 || 
+        origin.startsWith('http://localhost') ||
+        origin.endsWith('.onrender.com')) {
       callback(null, true);
     } else {
       callback(null, true); // Permissif pour le développement
@@ -80,15 +86,21 @@ app.use((err, req, res, next) => {
 });
 
 // Démarrer le serveur
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`
 ╔═══════════════════════════════════════════╗
 ║   🏠 KUSHTATI IMMO API                    ║
 ║   ✅ Serveur démarré sur port ${PORT}        ║
 ║   🌍 http://localhost:${PORT}               ║
-║   📊 Base de données SQLite connectée     ║
+║   📊 Base de données PostgreSQL connectée ║
 ╚═══════════════════════════════════════════╝
   `);
+  
+  // Tester la connexion PostgreSQL
+  if (db.testConnection) {
+    await db.testConnection();
+  }
 });
 
 module.exports = app;
+
