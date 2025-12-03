@@ -125,15 +125,15 @@ router.get('/seed', async (req, res) => {
     // 3. Créer quelques contrats
     console.log('📄 Création des contrats...');
     await client.query(
-      `INSERT INTO contracts (property_id, tenant_id, start_date, end_date, monthly_rent, status)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [propertyIds[0], userIds[2], '2024-01-01', '2024-12-31', 2500, 'active']
+      `INSERT INTO contracts (property_id, tenant_id, owner_id, start_date, end_date, monthly_rent, deposit, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [propertyIds[0], userIds[2], userIds[0], '2024-01-01', '2024-12-31', 2500, 5000, 'active']
     );
     
     await client.query(
-      `INSERT INTO contracts (property_id, tenant_id, start_date, end_date, monthly_rent, status)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [propertyIds[1], userIds[3], '2024-02-01', '2025-01-31', 1800, 'active']
+      `INSERT INTO contracts (property_id, tenant_id, owner_id, start_date, end_date, monthly_rent, deposit, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [propertyIds[1], userIds[3], userIds[0], '2024-02-01', '2025-01-31', 1800, 3600, 'active']
     );
     
     // 4. Créer quelques paiements
@@ -143,27 +143,27 @@ router.get('/seed', async (req, res) => {
     
     if (contractIds.length >= 2) {
       await client.query(
-        `INSERT INTO payments (contract_id, amount, payment_date, payment_method, status)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [contractIds[0], 2500, '2024-01-05', 'bank_transfer', 'completed']
+        `INSERT INTO payments (contract_id, tenant_id, amount, payment_date, payment_method, status)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [contractIds[0], userIds[2], 2500, '2024-01-05', 'Virement', 'Payé']
       );
       
       await client.query(
-        `INSERT INTO payments (contract_id, amount, payment_date, payment_method, status)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [contractIds[0], 2500, '2024-02-05', 'bank_transfer', 'completed']
+        `INSERT INTO payments (contract_id, tenant_id, amount, payment_date, payment_method, status)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [contractIds[0], userIds[2], 2500, '2024-02-05', 'Virement', 'Payé']
       );
       
       await client.query(
-        `INSERT INTO payments (contract_id, amount, payment_date, payment_method, status)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [contractIds[1], 1800, '2024-02-05', 'mobile_money', 'completed']
+        `INSERT INTO payments (contract_id, tenant_id, amount, payment_date, payment_method, status)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [contractIds[1], userIds[3], 1800, '2024-02-05', 'Orange Money', 'Payé']
       );
       
       await client.query(
-        `INSERT INTO payments (contract_id, amount, payment_date, payment_method, status)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [contractIds[1], 1800, '2024-03-05', 'mobile_money', 'pending']
+        `INSERT INTO payments (contract_id, tenant_id, amount, payment_date, payment_method, status)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [contractIds[1], userIds[3], 1800, '2024-03-05', 'Orange Money', 'En Attente']
       );
     }
     
