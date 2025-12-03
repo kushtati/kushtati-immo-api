@@ -55,7 +55,6 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/properties', require('./routes/properties'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/users', require('./routes/users'));
-app.use('/api/setup', require('./routes/setup')); // Routes temporaires d'initialisation
 
 // Route de test
 app.get('/', (req, res) => {
