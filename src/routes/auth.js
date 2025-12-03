@@ -3,24 +3,17 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/database');
+const { loginLimiter, registerLimiter } = require('../middleware/rateLimiter');
+const { registerValidation, loginValidation, validate } = require('../middleware/validation');
 
 /**
  * @route   POST /api/auth/register
  * @desc    Inscription d'un nouvel utilisateur
  * @access  Public
  */
-router.post('/register', async (req, res) => {
+router.post('/register', registerLimiter, registerValidation, validate, async (req, res) => {
   try {
     const { email, password, name, phone, role } = req.body;
-
-    // Validation
-    if (!email || !password || !name || !role) {
-      return res.status(400).json({ error: 'Tous les champs sont requis' });
-    }
-
-    if (!['owner', 'tenant'].includes(role)) {
-      return res.status(400).json({ error: 'Rôle invalide' });
-    }
 
     // Vérifier si l'email existe déjà
     const checkResult = await pool.query(
@@ -32,18 +25,18 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Cet email est déjà utilisé' });
     }
 
-    // Hasher le mot de passe
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hasher le mot de passe avec bcrypt (saltRounds=12 pour plus de sécurité)
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Insérer l'utilisateur
+    // Insérer l'utilisateur avec une requête paramétrée (protection SQL injection)
     const result = await pool.query(
-      'INSERT INTO users (email, password, name, phone, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, name, phone, role',
+      'INSERT INTO users (email, password, name, phone, role, created_at) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id, email, name, phone, role',
       [email, hashedPassword, name, phone || null, role]
     );
 
     const newUser = result.rows[0];
 
-    // Générer le token JWT
+    // Générer le token JWT sécurisé
     const token = jwt.sign(
       { id: newUser.id, email: newUser.email, role: newUser.role },
       process.env.JWT_SECRET,
@@ -66,16 +59,11 @@ router.post('/register', async (req, res) => {
  * @desc    Connexion d'un utilisateur
  * @access  Public
  */
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, loginValidation, validate, async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validation
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email et mot de passe requis' });
-    }
-
-    // Trouver l'utilisateur
+    // Trouver l'utilisateur avec une requête paramétrée
     const result = await pool.query(
       'SELECT * FROM users WHERE email = $1',
       [email]
@@ -87,7 +75,7 @@ router.post('/login', async (req, res) => {
 
     const user = result.rows[0];
 
-    // Vérifier le mot de passe
+    // Vérifier le mot de passe avec bcrypt.compare (sécurisé)
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {

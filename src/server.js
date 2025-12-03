@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const helmet = require('helmet');
+const { apiLimiter } = require('./middleware/rateLimiter');
 
 // Charger les variables d'environnement
 dotenv.config();
@@ -13,13 +15,26 @@ const db = require('./config/database');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Sécurité: Helmet pour headers HTTP sécurisés
+app.use(helmet());
+
+// Sécurité: Forcer HTTPS en production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.header('x-forwarded-proto') !== 'https') {
+      return res.redirect(`https://${req.header('host')}${req.url}`);
+    }
+    next();
+  });
+}
+
 // Middlewares - Configuration CORS
 app.use(cors({
   origin: function (origin, callback) {
     // Autoriser les requêtes sans origine (mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
 
-    // Liste des origines autorisées
+    // Liste des origines autorisées (HTTPS uniquement en production)
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:3001',
@@ -46,6 +61,9 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Rate limiting global pour toutes les routes API
+app.use('/api/', apiLimiter);
 
 // Servir les fichiers uploadés
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
