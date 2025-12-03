@@ -14,9 +14,8 @@ const registerValidation = [
   
   body('password')
     .isLength({ min: 8 })
-    .withMessage('Le mot de passe doit contenir au moins 8 caractères')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Le mot de passe doit contenir au moins une minuscule, une majuscule et un chiffre'),
+    .withMessage('Le mot de passe doit contenir au moins 8 caractères'),
+  // Note: Validation stricte de complexité retirée pour simplifier l'inscription
   
   body('name')
     .trim()
