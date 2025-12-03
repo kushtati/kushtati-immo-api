@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const { pool } = require('../config/database');
 const auth = require('../middlewares/auth');
 const multer = require('multer');
 const path = require('path');
@@ -37,52 +37,57 @@ const upload = multer({
  * @desc    Obtenir toutes les propriétés
  * @access  Public
  */
-router.get('/', (req, res) => {
-  const { type, status, minPrice, maxPrice, location } = req.query;
-  
-  let query = `
-    SELECT p.*, u.name as owner_name, u.email as owner_email, u.phone as owner_phone
-    FROM properties p
-    LEFT JOIN users u ON p.owner_id = u.id
-    WHERE 1=1
-  `;
-  const params = [];
+router.get('/', async (req, res) => {
+  try {
+    const { type, status, minPrice, maxPrice, location } = req.query;
+    
+    let query = `
+      SELECT p.*, u.name as owner_name, u.email as owner_email, u.phone as owner_phone
+      FROM properties p
+      LEFT JOIN users u ON p.owner_id = u.id
+      WHERE 1=1
+    `;
+    const params = [];
+    let paramIndex = 1;
 
-  if (type) {
-    query += ' AND p.type = ?';
-    params.push(type);
-  }
-
-  if (status) {
-    query += ' AND p.status = ?';
-    params.push(status);
-  }
-
-  if (minPrice) {
-    query += ' AND p.price >= ?';
-    params.push(parseFloat(minPrice));
-  }
-
-  if (maxPrice) {
-    query += ' AND p.price <= ?';
-    params.push(parseFloat(maxPrice));
-  }
-
-  if (location) {
-    query += ' AND p.location LIKE ?';
-    params.push(`%${location}%`);
-  }
-
-  query += ' ORDER BY p.created_at DESC';
-
-  db.all(query, params, (err, properties) => {
-    if (err) {
-      console.error('Erreur get properties:', err);
-      return res.status(500).json({ error: 'Erreur serveur' });
+    if (type) {
+      query += ` AND p.type = $${paramIndex}`;
+      params.push(type);
+      paramIndex++;
     }
 
-    res.json({ properties });
-  });
+    if (status) {
+      query += ` AND p.status = $${paramIndex}`;
+      params.push(status);
+      paramIndex++;
+    }
+
+    if (minPrice) {
+      query += ` AND p.price >= $${paramIndex}`;
+      params.push(parseFloat(minPrice));
+      paramIndex++;
+    }
+
+    if (maxPrice) {
+      query += ` AND p.price <= $${paramIndex}`;
+      params.push(parseFloat(maxPrice));
+      paramIndex++;
+    }
+
+    if (location) {
+      query += ` AND p.location ILIKE $${paramIndex}`;
+      params.push(`%${location}%`);
+      paramIndex++;
+    }
+
+    query += ' ORDER BY p.created_at DESC';
+
+    const result = await pool.query(query, params);
+    res.json({ properties: result.rows });
+  } catch (err) {
+    console.error('Erreur get properties:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 /**
@@ -90,90 +95,55 @@ router.get('/', (req, res) => {
  * @desc    Obtenir une propriété par ID
  * @access  Public
  */
-router.get('/:id', (req, res) => {
-  db.get(
-    `SELECT p.*, u.name as owner_name, u.email as owner_email, u.phone as owner_phone
-     FROM properties p
-     LEFT JOIN users u ON p.owner_id = u.id
-     WHERE p.id = ?`,
-    [req.params.id],
-    (err, property) => {
-      if (err) {
-        return res.status(500).json({ error: 'Erreur serveur' });
-      }
+router.get('/:id', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT p.*, u.name as owner_name, u.email as owner_email, u.phone as owner_phone
+       FROM properties p
+       LEFT JOIN users u ON p.owner_id = u.id
+       WHERE p.id = $1`,
+      [req.params.id]
+    );
 
-      if (!property) {
-        return res.status(404).json({ error: 'Propriété non trouvée' });
-      }
-
-      res.json({ property });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Propriété non trouvée' });
     }
-  );
+
+    res.json({ property: result.rows[0] });
+  } catch (err) {
+    console.error('Erreur get property:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 /**
  * @route   POST /api/properties
  * @desc    Créer une nouvelle propriété
- * @access  Private (Owner only)
+ * @access  Private (Propriétaires uniquement)
  */
-router.post('/', auth, upload.single('image'), (req, res) => {
+router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
     // Vérifier que l'utilisateur est un propriétaire
     if (req.user.role !== 'owner') {
-      return res.status(403).json({ error: 'Seuls les propriétaires peuvent ajouter des propriétés' });
+      return res.status(403).json({ error: 'Accès refusé. Seuls les propriétaires peuvent ajouter des propriétés.' });
     }
 
     const { title, description, location, price, type, beds, baths, sqft, status } = req.body;
-
-    // Validation
-    if (!title || !location || !price || !type) {
-      return res.status(400).json({ error: 'Titre, localisation, prix et type sont requis' });
-    }
-
-    if (!['Sale', 'Rent'].includes(type)) {
-      return res.status(400).json({ error: 'Type doit être "Sale" ou "Rent"' });
-    }
-
     const image_url = req.file ? `/uploads/${req.file.filename}` : null;
 
-    db.run(
-      `INSERT INTO properties 
-       (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        req.user.id,
-        title,
-        description || null,
-        location,
-        parseFloat(price),
-        type,
-        beds ? parseInt(beds) : null,
-        baths ? parseInt(baths) : null,
-        sqft ? parseInt(sqft) : null,
-        image_url,
-        status || 'available'
-      ],
-      function(err) {
-        if (err) {
-          console.error('Erreur create property:', err);
-          return res.status(500).json({ error: 'Erreur lors de la création de la propriété' });
-        }
-
-        // Récupérer la propriété créée
-        db.get('SELECT * FROM properties WHERE id = ?', [this.lastID], (err, property) => {
-          if (err) {
-            return res.status(500).json({ error: 'Erreur serveur' });
-          }
-
-          res.status(201).json({
-            message: 'Propriété créée avec succès',
-            property
-          });
-        });
-      }
+    const result = await pool.query(
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING *`,
+      [req.user.userId, title, description, location, price, type, beds || 0, baths || 0, sqft || 0, image_url, status || 'available']
     );
-  } catch (error) {
-    console.error('Erreur create property:', error);
+
+    res.status(201).json({
+      message: 'Propriété créée avec succès',
+      property: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Erreur create property:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -181,69 +151,44 @@ router.post('/', auth, upload.single('image'), (req, res) => {
 /**
  * @route   PUT /api/properties/:id
  * @desc    Mettre à jour une propriété
- * @access  Private (Owner only - own properties)
+ * @access  Private (Propriétaire de la propriété uniquement)
  */
-router.put('/:id', auth, upload.single('image'), (req, res) => {
+router.put('/:id', auth, upload.single('image'), async (req, res) => {
   try {
-    const propertyId = req.params.id;
-
     // Vérifier que la propriété existe et appartient à l'utilisateur
-    db.get('SELECT * FROM properties WHERE id = ?', [propertyId], (err, property) => {
-      if (err) {
-        return res.status(500).json({ error: 'Erreur serveur' });
-      }
+    const checkResult = await pool.query(
+      'SELECT * FROM properties WHERE id = $1',
+      [req.params.id]
+    );
 
-      if (!property) {
-        return res.status(404).json({ error: 'Propriété non trouvée' });
-      }
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Propriété non trouvée' });
+    }
 
-      if (property.owner_id !== req.user.id) {
-        return res.status(403).json({ error: 'Non autorisé' });
-      }
+    const property = checkResult.rows[0];
 
-      const { title, description, location, price, type, beds, baths, sqft, status } = req.body;
-      const image_url = req.file ? `/uploads/${req.file.filename}` : property.image_url;
+    if (property.owner_id !== req.user.userId) {
+      return res.status(403).json({ error: 'Non autorisé' });
+    }
 
-      db.run(
-        `UPDATE properties 
-         SET title = ?, description = ?, location = ?, price = ?, type = ?, 
-             beds = ?, baths = ?, sqft = ?, image_url = ?, status = ?, updated_at = CURRENT_TIMESTAMP
-         WHERE id = ?`,
-        [
-          title || property.title,
-          description !== undefined ? description : property.description,
-          location || property.location,
-          price ? parseFloat(price) : property.price,
-          type || property.type,
-          beds !== undefined ? (beds ? parseInt(beds) : null) : property.beds,
-          baths !== undefined ? (baths ? parseInt(baths) : null) : property.baths,
-          sqft !== undefined ? (sqft ? parseInt(sqft) : null) : property.sqft,
-          image_url,
-          status || property.status,
-          propertyId
-        ],
-        function(err) {
-          if (err) {
-            console.error('Erreur update property:', err);
-            return res.status(500).json({ error: 'Erreur lors de la mise à jour' });
-          }
+    const { title, description, location, price, type, beds, baths, sqft, status } = req.body;
+    const image_url = req.file ? `/uploads/${req.file.filename}` : property.image_url;
 
-          // Récupérer la propriété mise à jour
-          db.get('SELECT * FROM properties WHERE id = ?', [propertyId], (err, updatedProperty) => {
-            if (err) {
-              return res.status(500).json({ error: 'Erreur serveur' });
-            }
+    const result = await pool.query(
+      `UPDATE properties 
+       SET title = $1, description = $2, location = $3, price = $4, type = $5, 
+           beds = $6, baths = $7, sqft = $8, image_url = $9, status = $10, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $11
+       RETURNING *`,
+      [title, description, location, price, type, beds, baths, sqft, image_url, status, req.params.id]
+    );
 
-            res.json({
-              message: 'Propriété mise à jour avec succès',
-              property: updatedProperty
-            });
-          });
-        }
-      );
+    res.json({
+      message: 'Propriété mise à jour avec succès',
+      property: result.rows[0]
     });
-  } catch (error) {
-    console.error('Erreur update property:', error);
+  } catch (err) {
+    console.error('Erreur update property:', err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -251,53 +196,61 @@ router.put('/:id', auth, upload.single('image'), (req, res) => {
 /**
  * @route   DELETE /api/properties/:id
  * @desc    Supprimer une propriété
- * @access  Private (Owner only - own properties)
+ * @access  Private (Propriétaire de la propriété uniquement)
  */
-router.delete('/:id', auth, (req, res) => {
-  const propertyId = req.params.id;
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    // Vérifier que la propriété existe et appartient à l'utilisateur
+    const checkResult = await pool.query(
+      'SELECT * FROM properties WHERE id = $1',
+      [req.params.id]
+    );
 
-  // Vérifier que la propriété existe et appartient à l'utilisateur
-  db.get('SELECT * FROM properties WHERE id = ?', [propertyId], (err, property) => {
-    if (err) {
-      return res.status(500).json({ error: 'Erreur serveur' });
-    }
-
-    if (!property) {
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({ error: 'Propriété non trouvée' });
     }
 
-    if (property.owner_id !== req.user.id) {
+    const property = checkResult.rows[0];
+
+    if (property.owner_id !== req.user.userId) {
       return res.status(403).json({ error: 'Non autorisé' });
     }
 
-    db.run('DELETE FROM properties WHERE id = ?', [propertyId], function(err) {
-      if (err) {
-        console.error('Erreur delete property:', err);
-        return res.status(500).json({ error: 'Erreur lors de la suppression' });
-      }
+    await pool.query('DELETE FROM properties WHERE id = $1', [req.params.id]);
 
-      res.json({ message: 'Propriété supprimée avec succès' });
-    });
-  });
+    res.json({ message: 'Propriété supprimée avec succès' });
+  } catch (err) {
+    console.error('Erreur delete property:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 /**
  * @route   GET /api/properties/owner/:ownerId
  * @desc    Obtenir toutes les propriétés d'un propriétaire
- * @access  Public
+ * @access  Private
  */
-router.get('/owner/:ownerId', (req, res) => {
-  db.all(
-    'SELECT * FROM properties WHERE owner_id = ? ORDER BY created_at DESC',
-    [req.params.ownerId],
-    (err, properties) => {
-      if (err) {
-        return res.status(500).json({ error: 'Erreur serveur' });
-      }
-
-      res.json({ properties });
+router.get('/owner/:ownerId', auth, async (req, res) => {
+  try {
+    // Vérifier que l'utilisateur demande ses propres propriétés
+    if (req.user.userId !== parseInt(req.params.ownerId)) {
+      return res.status(403).json({ error: 'Non autorisé' });
     }
-  );
+
+    const result = await pool.query(
+      `SELECT p.*, u.name as owner_name, u.email as owner_email, u.phone as owner_phone
+       FROM properties p
+       LEFT JOIN users u ON p.owner_id = u.id
+       WHERE p.owner_id = $1
+       ORDER BY p.created_at DESC`,
+      [req.params.ownerId]
+    );
+
+    res.json({ properties: result.rows });
+  } catch (err) {
+    console.error('Erreur get owner properties:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 module.exports = router;
