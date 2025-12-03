@@ -53,25 +53,26 @@ const seed = async () => {
     console.log('🏠 Création des propriétés...');
 
     const prop1 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner1,
         'Villa Moderne à Kaloum',
-        'Magnifique villa de 4 chambres avec jardin, située dans un quartier calme de Kaloum. Proche de tous les services.',
+        'Superbe villa moderne avec vue panoramique sur la mer, 4 chambres spacieuses, salon double, cuisine équipée, jardin paysager.',
         'Kaloum, Conakry',
         15000000,
         'Sale',
         4,
         3,
         2500,
+        'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&h=600&fit=crop',
         'available'
       ]
     );
 
     const prop2 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner1,
         'Appartement F3 Matam',
@@ -82,30 +83,32 @@ const seed = async () => {
         3,
         2,
         1200,
+        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop',
         'rented'
       ]
     );
 
     const prop3 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner1,
         'Studio Meublé Taouyah',
-        'Studio moderne entièrement meublé et équipé, idéal pour jeune professionnel.',
+        'Studio tout équipé avec cuisine américaine, climatisation, idéal pour célibataire ou couple.',
         'Taouyah, Conakry',
         1500000,
         'Rent',
         1,
         1,
-        450,
+        500,
+        'https://images.unsplash.com/photo-1502672260066-6bc35f0a1934?w=800&h=600&fit=crop',
         'available'
       ]
     );
 
     const prop4 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner2,
         'Duplex Ratoma',
@@ -116,13 +119,14 @@ const seed = async () => {
         5,
         4,
         3500,
+        'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop',
         'available'
       ]
     );
 
     const prop5 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner2,
         'Appartement F4 Dixinn',
@@ -133,13 +137,14 @@ const seed = async () => {
         4,
         2,
         1800,
+        'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop',
         'rented'
       ]
     );
 
     const prop6 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner2,
         'Maison de Campagne Kindia',
@@ -150,13 +155,14 @@ const seed = async () => {
         3,
         2,
         2000,
+        'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&h=600&fit=crop',
         'available'
       ]
     );
 
     const prop7 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner1,
         'Local Commercial Madina',
@@ -167,13 +173,14 @@ const seed = async () => {
         0,
         1,
         1000,
+        'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=600&fit=crop',
         'available'
       ]
     );
 
     const prop8 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner2,
         'Villa de Luxe Kipé',
@@ -184,13 +191,14 @@ const seed = async () => {
         6,
         5,
         5000,
+        'https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=800&h=600&fit=crop',
         'available'
       ]
     );
 
     const prop9 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner1,
         'Appartement Standing Almamya',
@@ -201,13 +209,14 @@ const seed = async () => {
         3,
         2,
         1500,
+        'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&h=600&fit=crop',
         'available'
       ]
     );
 
     const prop10 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner2,
         'Bureau Moderne Centre-Ville',
@@ -218,13 +227,14 @@ const seed = async () => {
         0,
         2,
         2000,
+        'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=800&h=600&fit=crop',
         'available'
       ]
     );
 
     const prop11 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner1,
         'Villa Familiale Lambanyi',
@@ -235,13 +245,14 @@ const seed = async () => {
         5,
         3,
         3000,
+        'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop',
         'available'
       ]
     );
 
     const prop12 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner2,
         'Studio Équipé Hamdallaye',
@@ -252,13 +263,14 @@ const seed = async () => {
         1,
         1,
         400,
+        'https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800&h=600&fit=crop',
         'available'
       ]
     );
 
     const prop13 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner1,
         'Immeuble de Rapport Koloma',
@@ -269,13 +281,14 @@ const seed = async () => {
         18,
         12,
         15000,
+        'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop',
         'available'
       ]
     );
 
     const prop14 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner2,
         'Appartement F2 Bambeto',
@@ -286,13 +299,14 @@ const seed = async () => {
         2,
         1,
         800,
+        'https://images.unsplash.com/photo-1502672023488-70e25813eb80?w=800&h=600&fit=crop',
         'rented'
       ]
     );
 
     const prop15 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner1,
         'Résidence Sécurisée Coléah',
@@ -303,13 +317,14 @@ const seed = async () => {
         4,
         3,
         2800,
+        'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop',
         'available'
       ]
     );
 
     const prop16 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner2,
         'Terrain Constructible Kobaya',
@@ -320,13 +335,14 @@ const seed = async () => {
         0,
         0,
         10000,
+        'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&h=600&fit=crop',
         'available'
       ]
     );
 
     const prop17 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner1,
         'Penthouse Tombo',
@@ -337,13 +353,14 @@ const seed = async () => {
         4,
         4,
         4000,
+        'https://images.unsplash.com/photo-1567496898669-ee935f5f647a?w=800&h=600&fit=crop',
         'available'
       ]
     );
 
     const prop18 = await runQuery(
-      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         owner2,
         'Maison Traditionnelle Labé',
@@ -354,6 +371,7 @@ const seed = async () => {
         4,
         2,
         1800,
+        'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&h=600&fit=crop',
         'available'
       ]
     );
