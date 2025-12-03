@@ -101,8 +101,8 @@ router.get('/seed', async (req, res) => {
       const ownerId = prop.price > 200000 ? userIds[1] : userIds[0];
       const result = await client.query(
         `INSERT INTO properties (
-          title, description, price, location, property_type, 
-          bedrooms, bathrooms, area, image_url, owner_id, status
+          title, description, price, location, type, 
+          beds, baths, sqft, image_url, owner_id, status
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
         RETURNING id`,
         [
@@ -110,7 +110,7 @@ router.get('/seed', async (req, res) => {
           `Belle ${prop.type} située à ${prop.location}. Idéale pour famille ou investissement.`,
           prop.price,
           prop.location,
-          prop.type,
+          'Rent',
           prop.bedrooms,
           prop.bathrooms,
           prop.area,
