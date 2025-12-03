@@ -67,7 +67,7 @@ router.get('/seed', async (req, res) => {
     const userIds = [];
     for (const user of users) {
       const result = await client.query(
-        'INSERT INTO users (email, password, full_name, role) VALUES ($1, $2, $3, $4) RETURNING id',
+        'INSERT INTO users (email, password, name, role) VALUES ($1, $2, $3, $4) RETURNING id',
         [user.email, hashedPassword, user.name, user.role]
       );
       userIds.push(result.rows[0].id);
