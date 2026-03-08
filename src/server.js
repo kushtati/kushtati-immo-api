@@ -18,46 +18,37 @@ const PORT = process.env.PORT || 5000;
 // Sécurité: Helmet pour headers HTTP sécurisés
 app.use(helmet());
 
-// Sécurité: Forcer HTTPS en production
-if (process.env.NODE_ENV === 'production') {
-  app.use((req, res, next) => {
-    if (req.header('x-forwarded-proto') !== 'https') {
-      return res.redirect(`https://${req.header('host')}${req.url}`);
-    }
-    next();
-  });
-}
-
-// Middlewares - Configuration CORS
+// CORS
 app.use(cors({
   origin: function (origin, callback) {
-    // Autoriser les requêtes sans origine (mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
 
-    // Liste des origines autorisées (HTTPS uniquement en production)
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:3001',
-      'http://localhost:80',
-      'http://frontend',
-      'http://frontend:80',
-      'https://kushtati-immo.onrender.com',
-      'https://kushtati-immo-api.onrender.com',
-      process.env.FRONTEND_URL
+      'http://localhost:5173',
+      process.env.FRONTEND_URL,
     ].filter(Boolean);
 
-    // Accepter localhost et les URLs Render
-    if (allowedOrigins.indexOf(origin) !== -1 || 
-        origin.startsWith('http://localhost') ||
-        origin.endsWith('.onrender.com')) {
+    const isAllowed =
+      allowedOrigins.includes(origin) ||
+      origin.startsWith('http://localhost') ||
+      origin.endsWith('.onrender.com') ||
+      origin.endsWith('.railway.app') ||
+      origin.endsWith('.up.railway.app') ||
+      origin.endsWith('.vercel.app');
+
+    if (isAllowed) {
       callback(null, true);
+    } else if (process.env.NODE_ENV === 'production') {
+      callback(new Error('Not allowed by CORS'));
     } else {
-      callback(null, true); // Permissif pour le développement
+      callback(null, true);
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -75,18 +66,16 @@ app.use('/api/properties', require('./routes/properties'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/users', require('./routes/users'));
 
-// Route de test
+// Health check pour Railway
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.get('/', (req, res) => {
-  res.json({ 
-    message: '🏠 Kushtati Immo API',
-    version: '1.0.0',
+  res.json({
+    message: 'Kushtati Immo API',
+    version: '2.0.0',
     status: 'running',
-    endpoints: {
-      auth: '/api/auth',
-      properties: '/api/properties',
-      payments: '/api/payments',
-      users: '/api/users'
-    }
   });
 });
 
@@ -97,10 +86,18 @@ app.use((req, res) => {
 
 // Gestion des erreurs globales
 app.use((err, req, res, next) => {
-  console.error('❌ Erreur:', err);
-  res.status(500).json({ 
+  // Log détaillé avec stack trace complète
+  console.error('❌ Erreur globale:', {
+    message: err.message,
+    stack: err.stack,
+    url: req.originalUrl,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  });
+  
+  res.status(err.status || 500).json({ 
     error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Une erreur est survenue'
   });
 });
 

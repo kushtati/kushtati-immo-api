@@ -45,8 +45,8 @@ router.get('/', auth, async (req, res) => {
 
     const result = await pool.query(query, params);
     res.json({ payments: result.rows });
-  } catch (err) {
-    console.error('Erreur get payments:', err);
+  } catch (error) {
+    console.error('Erreur get payments:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -59,7 +59,7 @@ router.get('/', auth, async (req, res) => {
 router.get('/:id', auth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT p.*, c.property_id, c.monthly_rent,
+      `SELECT p.*, c.property_id, c.monthly_rent, c.owner_id as contract_owner_id,
               prop.title as property_title, prop.location as property_location,
               tenant.name as tenant_name, tenant.email as tenant_email,
               owner.name as owner_name, owner.email as owner_email
@@ -79,13 +79,19 @@ router.get('/:id', auth, async (req, res) => {
     const payment = result.rows[0];
 
     // Vérifier les permissions
+    // 1. Si locataire et pas son paiement
     if (req.user.role === 'tenant' && payment.tenant_id !== req.user.id) {
       return res.status(403).json({ error: 'Non autorisé' });
     }
 
+    // 2. Si propriétaire et pas le propriétaire du contrat
+    if (req.user.role === 'owner' && payment.contract_owner_id !== req.user.id) {
+      return res.status(403).json({ error: 'Non autorisé' });
+    }
+
     res.json({ payment });
-  } catch (err) {
-    console.error('Erreur get payment:', err);
+  } catch (error) {
+    console.error('Erreur get payment:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -121,8 +127,8 @@ router.get('/contract/:contractId', auth, async (req, res) => {
     );
 
     res.json({ payments: paymentsResult.rows });
-  } catch (err) {
-    console.error('Erreur get contract payments:', err);
+  } catch (error) {
+    console.error('Erreur get contract payments:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -287,8 +293,8 @@ router.delete('/:id', auth, async (req, res) => {
     await pool.query('DELETE FROM payments WHERE id = $1', [paymentId]);
 
     res.json({ message: 'Paiement supprimé avec succès' });
-  } catch (err) {
-    console.error('Erreur delete payment:', err);
+  } catch (error) {
+    console.error('Erreur delete payment:', error);
     res.status(500).json({ error: 'Erreur lors de la suppression' });
   }
 });

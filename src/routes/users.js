@@ -7,16 +7,21 @@ const bcrypt = require('bcryptjs');
 /**
  * @route   GET /api/users
  * @desc    Obtenir tous les utilisateurs
- * @access  Private
+ * @access  Private (Owner Only)
  */
 router.get('/', auth, async (req, res) => {
   try {
+    // Limiter l'accès à la liste complète aux propriétaires
+    if (req.user.role !== 'owner') {
+      return res.status(403).json({ error: 'Accès réservé aux propriétaires' });
+    }
+
     const result = await pool.query(
       'SELECT id, email, name, phone, role, created_at FROM users ORDER BY created_at DESC'
     );
     res.json({ users: result.rows });
-  } catch (err) {
-    console.error('Erreur get users:', err);
+  } catch (error) {
+    console.error('Erreur get users:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -38,8 +43,8 @@ router.get('/:id', auth, async (req, res) => {
     }
 
     res.json({ user: result.rows[0] });
-  } catch (err) {
-    console.error('Erreur get user:', err);
+  } catch (error) {
+    console.error('Erreur get user:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -90,8 +95,9 @@ router.put('/:id', auth, async (req, res) => {
         return res.status(401).json({ error: 'Mot de passe actuel incorrect' });
       }
 
-      // Hasher le nouveau mot de passe
-      hashedPassword = await bcrypt.hash(newPassword, 10);
+      // Hasher le nouveau mot de passe avec SALT_ROUNDS cohérent
+      const SALT_ROUNDS = 12;
+      hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
     }
 
     // Mettre à jour l'utilisateur
@@ -142,8 +148,8 @@ router.delete('/:id', auth, async (req, res) => {
     await pool.query('DELETE FROM users WHERE id = $1', [userId]);
 
     res.json({ message: 'Compte supprimé avec succès' });
-  } catch (err) {
-    console.error('Erreur delete user:', err);
+  } catch (error) {
+    console.error('Erreur delete user:', error);
     res.status(500).json({ error: 'Erreur lors de la suppression' });
   }
 });
@@ -160,8 +166,8 @@ router.get('/owners/list', async (req, res) => {
       ['owner']
     );
     res.json({ owners: result.rows });
-  } catch (err) {
-    console.error('Erreur get owners:', err);
+  } catch (error) {
+    console.error('Erreur get owners:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -182,8 +188,8 @@ router.get('/tenants/list', auth, async (req, res) => {
       ['tenant']
     );
     res.json({ tenants: result.rows });
-  } catch (err) {
-    console.error('Erreur get tenants:', err);
+  } catch (error) {
+    console.error('Erreur get tenants:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

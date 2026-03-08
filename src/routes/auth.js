@@ -5,6 +5,16 @@ const jwt = require('jsonwebtoken');
 const { pool } = require('../config/database');
 const { loginLimiter, registerLimiter } = require('../middleware/rateLimiter');
 const { registerValidation, loginValidation, validate } = require('../middleware/validation');
+const authMiddleware = require('../middlewares/auth');
+
+// --- Fonction utilitaire de génération de Token ---
+const generateAuthToken = (user) => {
+    return jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+};
 
 /**
  * @route   POST /api/auth/register
@@ -36,12 +46,8 @@ router.post('/register', registerLimiter, registerValidation, validate, async (r
 
     const newUser = result.rows[0];
 
-    // Générer le token JWT sécurisé
-    const token = jwt.sign(
-      { id: newUser.id, email: newUser.email, role: newUser.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // Générer le token JWT sécurisé (Utilisation de la fonction utilitaire)
+    const token = generateAuthToken(newUser);
 
     res.status(201).json({
       message: 'Compte créé avec succès',
@@ -82,12 +88,8 @@ router.post('/login', loginLimiter, loginValidation, validate, async (req, res) 
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
 
-    // Générer le token JWT
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // Générer le token JWT (Utilisation de la fonction utilitaire)
+    const token = generateAuthToken(user);
 
     res.json({
       message: 'Connexion réussie',
@@ -109,21 +111,14 @@ router.post('/login', loginLimiter, loginValidation, validate, async (req, res) 
 /**
  * @route   GET /api/auth/me
  * @desc    Obtenir le profil de l'utilisateur connecté
- * @access  Private
+ * @access  Private (protégé par authMiddleware)
  */
-router.get('/me', async (req, res) => {
+router.get('/me', authMiddleware, async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-
-    if (!token) {
-      return res.status(401).json({ error: 'Token manquant' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+    // Le middleware authMiddleware a déjà vérifié le token et ajouté req.user
     const result = await pool.query(
       'SELECT id, email, name, phone, role FROM users WHERE id = $1',
-      [decoded.id]
+      [req.user.id]
     );
 
     if (result.rows.length === 0) {
@@ -133,7 +128,7 @@ router.get('/me', async (req, res) => {
     res.json({ user: result.rows[0] });
   } catch (error) {
     console.error('Erreur get me:', error);
-    res.status(401).json({ error: 'Token invalide' });
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 

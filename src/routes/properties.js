@@ -4,6 +4,7 @@ const { pool } = require('../config/database');
 const auth = require('../middlewares/auth');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs/promises');
 
 // Configuration multer pour l'upload d'images
 const storage = multer.diskStorage({
@@ -84,8 +85,8 @@ router.get('/', async (req, res) => {
 
     const result = await pool.query(query, params);
     res.json({ properties: result.rows });
-  } catch (err) {
-    console.error('Erreur get properties:', err);
+  } catch (error) {
+    console.error('Erreur get properties:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -110,8 +111,8 @@ router.get('/:id', async (req, res) => {
     }
 
     res.json({ property: result.rows[0] });
-  } catch (err) {
-    console.error('Erreur get property:', err);
+  } catch (error) {
+    console.error('Erreur get property:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -135,15 +136,15 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
       `INSERT INTO properties (owner_id, title, description, location, price, type, beds, baths, sqft, image_url, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
-      [req.user.userId, title, description, location, price, type, beds || 0, baths || 0, sqft || 0, image_url, status || 'available']
+      [req.user.id, title, description, location, price, type, beds || 0, baths || 0, sqft || 0, image_url, status || 'available']
     );
 
     res.status(201).json({
       message: 'Propriété créée avec succès',
       property: result.rows[0]
     });
-  } catch (err) {
-    console.error('Erreur create property:', err);
+  } catch (error) {
+    console.error('Erreur create property:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -167,7 +168,7 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
 
     const property = checkResult.rows[0];
 
-    if (property.owner_id !== req.user.userId) {
+    if (property.owner_id !== req.user.id) {
       return res.status(403).json({ error: 'Non autorisé' });
     }
 
@@ -183,12 +184,25 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
       [title, description, location, price, type, beds, baths, sqft, image_url, status, req.params.id]
     );
 
+    // Supprimer l'ancienne image si une nouvelle a été uploadée
+    if (req.file && property.image_url && property.image_url !== image_url) {
+      const oldImagePath = path.join(__dirname, '..', '..', property.image_url);
+      
+      try {
+        await fs.unlink(oldImagePath);
+        console.log(`Ancienne image supprimée: ${oldImagePath}`);
+      } catch (fsError) {
+        console.warn(`Impossible de supprimer l'ancienne image: ${oldImagePath}`, fsError.message);
+        // Continue même si la suppression échoue
+      }
+    }
+
     res.json({
       message: 'Propriété mise à jour avec succès',
       property: result.rows[0]
     });
-  } catch (err) {
-    console.error('Erreur update property:', err);
+  } catch (error) {
+    console.error('Erreur update property:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -212,15 +226,15 @@ router.delete('/:id', auth, async (req, res) => {
 
     const property = checkResult.rows[0];
 
-    if (property.owner_id !== req.user.userId) {
+    if (property.owner_id !== req.user.id) {
       return res.status(403).json({ error: 'Non autorisé' });
     }
 
     await pool.query('DELETE FROM properties WHERE id = $1', [req.params.id]);
 
     res.json({ message: 'Propriété supprimée avec succès' });
-  } catch (err) {
-    console.error('Erreur delete property:', err);
+  } catch (error) {
+    console.error('Erreur delete property:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -233,7 +247,7 @@ router.delete('/:id', auth, async (req, res) => {
 router.get('/owner/:ownerId', auth, async (req, res) => {
   try {
     // Vérifier que l'utilisateur demande ses propres propriétés
-    if (req.user.userId !== parseInt(req.params.ownerId)) {
+    if (req.user.id !== parseInt(req.params.ownerId)) {
       return res.status(403).json({ error: 'Non autorisé' });
     }
 
@@ -247,8 +261,8 @@ router.get('/owner/:ownerId', auth, async (req, res) => {
     );
 
     res.json({ properties: result.rows });
-  } catch (err) {
-    console.error('Erreur get owner properties:', err);
+  } catch (error) {
+    console.error('Erreur get owner properties:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

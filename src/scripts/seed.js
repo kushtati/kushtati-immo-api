@@ -10,10 +10,28 @@ const seed = async () => {
     // Commencer une transaction
     await client.query('BEGIN');
 
-    // 1. Créer des utilisateurs
+    // 🧹 1. NETTOYAGE PRÉALABLE (Pour un re-seeding propre)
+    console.log('🧹 Nettoyage des tables (Suppression des données existantes)...');
+    
+    // Suppression dans l'ordre inverse des dépendances (Clés étrangères)
+    await client.query('DELETE FROM payments');
+    await client.query('DELETE FROM contracts');
+    await client.query('DELETE FROM properties');
+    await client.query('DELETE FROM users');
+    
+    // Réinitialisation des séquences d'ID pour un environnement propre (ID recommencent à 1)
+    await client.query('ALTER SEQUENCE users_id_seq RESTART WITH 1');
+    await client.query('ALTER SEQUENCE properties_id_seq RESTART WITH 1');
+    await client.query('ALTER SEQUENCE contracts_id_seq RESTART WITH 1');
+    await client.query('ALTER SEQUENCE payments_id_seq RESTART WITH 1');
+    
+    console.log('✅ Nettoyage et réinitialisation des séquences terminés.\n');
+
+    // 2. Créer des utilisateurs
     console.log('👤 Création des utilisateurs...');
 
-    const hashedPassword = await bcrypt.hash('password123', 10);
+    const SALT_ROUNDS = 12; // Utiliser 12 pour une meilleure sécurité
+    const hashedPassword = await bcrypt.hash('password123', SALT_ROUNDS);
 
     // Propriétaires
     const owner1Result = await client.query(
