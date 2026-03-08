@@ -15,40 +15,30 @@ const db = require('./config/database');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Sécurité: Helmet pour headers HTTP sécurisés
-app.use(helmet());
-
-// CORS
+// CORS en premier (avant Helmet)
 app.use(cors({
   origin: function (origin, callback) {
+    // Pas d'origine = requête directe (Postman, mobile, curl) → OK
     if (!origin) return callback(null, true);
 
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:5173',
-      process.env.FRONTEND_URL,
-    ].filter(Boolean);
-
     const isAllowed =
-      allowedOrigins.includes(origin) ||
       origin.startsWith('http://localhost') ||
       origin.endsWith('.onrender.com') ||
       origin.endsWith('.railway.app') ||
       origin.endsWith('.up.railway.app') ||
-      origin.endsWith('.vercel.app');
+      origin.endsWith('.vercel.app') ||
+      (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL);
 
-    if (isAllowed) {
-      callback(null, true);
-    } else if (process.env.NODE_ENV === 'production') {
-      callback(new Error('Not allowed by CORS'));
-    } else {
-      callback(null, true);
-    }
+    callback(null, isAllowed ? true : false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Helmet après CORS, avec CORP désactivé pour permettre les requêtes cross-origin
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
